@@ -1,41 +1,39 @@
+import tkinter as tk
+from tkinter import messagebox
 import requests
 from bs4 import BeautifulSoup
-import tkinter as tk
-from tkinter import ttk
 
-def scrape_data(url, tag):
+def scrape_website():
+    query = entry.get()
+    if not query:
+        messagebox.showerror("Error", "Please enter a query")
+        return
+
+    url = f"https://www.toughstart.org{query}"
     response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-    elements = soup.find_all(tag)
-    return [element.text for element in elements]
+    soup = BeautifulSoup(response.text, "html.parser")
 
-def start_scraping():
-    url = url_entry.get()
-    tag = tag_entry.get()
-    data = scrape_data(url, tag)
-    result.delete(1.0, tk.END)
-    result.insert(tk.END, '\n'.join(data))
+    results = soup.find_all("div", class_="result")
 
-app = tk.Tk()
-app.title("Web Scraper")
+    with open("output.txt", "w") as output_file:
+        for result in results:
+            output_file.write(result.text + "\n")
 
-frame = ttk.Frame(app, padding="10")
-frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+    messagebox.showinfo("Success", "Results saved to output.txt")
 
-url_label = ttk.Label(frame, text="URL:")
-url_label.grid(row=0, column=0, sticky=tk.W)
-url_entry = ttk.Entry(frame, width=50)
-url_entry.grid(row=0, column=1)
+root = tk.Tk()
+root.title("Web Scraper")
 
-tag_label = ttk.Label(frame, text="Tag:")
-tag_label.grid(row=1, column=0, sticky=tk.W)
-tag_entry = ttk.Entry(frame, width=50)
-tag_entry.grid(row=1, column=1)
+frame = tk.Frame(root, padx=10, pady=10)
+frame.pack()
 
-scrape_button = ttk.Button(frame, text="Scrape", command=start_scraping)
-scrape_button.grid(row=2, column=0, columnspan=2)
+label = tk.Label(frame, text="Enter your query:")
+label.pack()
 
-result = tk.Text(frame, wrap=tk.WORD, width=60, height=20)
-result.grid(row=3, column=0, columnspan=2)
+entry = tk.Entry(frame)
+entry.pack()
 
-app.mainloop()
+button = tk.Button(frame, text="Scrape", command=scrape_website)
+button.pack()
+
+root.mainloop()
